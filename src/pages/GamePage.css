@@ -52,3 +52,42 @@
 .game-page__signin-btn:hover {
   opacity: 0.88;
 }
+
+.game-page__notification {
+  position: fixed;
+  top: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e3a1e;
+  border: 1px solid #4caf50;
+  color: #a5d6a7;
+  padding: 0.75rem 1.25rem;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  z-index: 200;
+  animation: slide-in 0.3s ease;
+}
+
+.game-page__notification-close {
+  background: none;
+  border: none;
+  color: #a5d6a7;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.game-page__notification-close:hover {
+  opacity: 1;
+}
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}

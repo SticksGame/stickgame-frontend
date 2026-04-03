@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { signInWithPopup } from 'firebase/auth'
 import { auth, googleProvider } from '../config/firebase'
@@ -27,10 +27,24 @@ export function GamePage() {
   const navigate = useNavigate()
   const [modal, setModal] = useState<ModalState>('none')
   const [gameStarted, setGameStarted] = useState(false)
+  const [isOwner, setIsOwner] = useState(false)
   const [initialSticks, setInitialSticks] = useState<Stick[] | null>(null)
+  const [notification, setNotification] = useState<string | null>(null)
+  const prevState = useRef<string | null>(null)
 
   const gameEvent = useGameEvents(gameStarted ? gameId : undefined, user)
   const sticks = gameEvent?.sticks ?? initialSticks ?? []
+
+  // Show notification to owner when guest joins
+  useEffect(() => {
+    if (!gameEvent || !isOwner) return
+    if (prevState.current !== 'playing' && gameEvent.state === 'playing') {
+      const name = gameEvent.guestName ?? gameEvent.guestEmail ?? 'Someone'
+      const email = gameEvent.guestEmail ? ` (${gameEvent.guestEmail})` : ''
+      setNotification(`${name}${email} has accepted the invitation`)
+    }
+    prevState.current = gameEvent.state
+  }, [gameEvent, isOwner])
 
   useEffect(() => {
     if (!gameId || !user) return
@@ -42,6 +56,7 @@ export function GamePage() {
         .then((res) => res.json())
         .then((game: GameData) => {
           setInitialSticks(game.sticks)
+          setIsOwner(game.isOwner)
           if (game.state === 'ready') {
             setModal(game.isOwner ? 'invite' : 'join')
           } else if (game.state === 'playing') {
@@ -125,6 +140,17 @@ export function GamePage() {
 
   return (
     <main className="game-page">
+      {notification && (
+        <div className="game-page__notification">
+          <span>{notification}</span>
+          <button
+            className="game-page__notification-close"
+            onClick={() => setNotification(null)}
+          >
+            ✕
+          </button>
+        </div>
+      )}
       <p className="game-page__id">Game: {gameId}</p>
       <p className={`game-page__turn ${isMyTurn && gameStarted ? 'game-page__turn--active' : ''}`}>
         {turnLabel}
