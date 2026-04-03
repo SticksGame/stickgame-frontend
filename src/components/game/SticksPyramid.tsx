@@ -15,6 +15,13 @@ interface DragState {
   current: number
 }
 
+interface DragLine {
+  startX: number
+  startY: number
+  endX: number
+  endY: number
+}
+
 interface SticksPyramidProps {
   sticks: Stick[]
   disabled?: boolean
@@ -23,14 +30,14 @@ interface SticksPyramidProps {
 
 export function SticksPyramid({ sticks, disabled = false, onMove }: SticksPyramidProps) {
   const [drag, setDrag] = useState<DragState | null>(null)
+  const [dragLine, setDragLine] = useState<DragLine | null>(null)
   const isDragging = useRef(false)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   function getStick(row: number, index: number) {
     return sticks.find((s) => s.row === row && s.index === index)
   }
 
-  // Compute the valid contiguous selection from anchor toward current,
-  // stopping before any crossed stick.
   function computeSelectedIndices(d: DragState): number[] {
     const dir = d.current >= d.anchor ? 1 : -1
     const result: number[] = []
@@ -47,29 +54,55 @@ export function SticksPyramid({ sticks, disabled = false, onMove }: SticksPyrami
     return computeSelectedIndices(drag).includes(index)
   }
 
+  function toContainerCoords(clientX: number, clientY: number) {
+    const rect = containerRef.current!.getBoundingClientRect()
+    return { x: clientX - rect.left, y: clientY - rect.top }
+  }
+
   function handlePointerDown(e: React.PointerEvent, row: number, index: number) {
     if (disabled) return
     const stick = getStick(row, index)
     if (stick?.crossed) return
     e.preventDefault()
-    // Release pointer capture so pointerenter fires on other sticks during drag
     e.currentTarget.releasePointerCapture(e.pointerId)
     isDragging.current = true
     setDrag({ row, anchor: index, current: index })
+    const { x, y } = toContainerCoords(e.clientX, e.clientY)
+    setDragLine({ startX: x, startY: y, endX: x, endY: y })
   }
 
-  function handlePointerEnter(row: number, index: number) {
+  function handleContainerPointerMove(e: React.PointerEvent<HTMLDivElement>) {
     if (!isDragging.current || !drag) return
-    if (drag.row !== row) return
-    setDrag((prev) => (prev ? { ...prev, current: index } : null))
+
+    // Update the visual line endpoint to follow the pointer
+    const { x, y } = toContainerCoords(e.clientX, e.clientY)
+    setDragLine((prev) => (prev ? { ...prev, endX: x, endY: y } : null))
+
+    // Hit-test: find which stick element is directly under the pointer
+    const elements = document.elementsFromPoint(e.clientX, e.clientY)
+    const stickEl = elements.find(
+      (el) =>
+        el.hasAttribute('data-stick-row') &&
+        !el.classList.contains('pyramid__stick--crossed')
+    )
+    if (stickEl) {
+      const elRow = parseInt(stickEl.getAttribute('data-stick-row') ?? '-1')
+      const elIndex = parseInt(stickEl.getAttribute('data-stick-index') ?? '-1')
+      if (elRow === drag.row && elIndex >= 0) {
+        setDrag((prev) => (prev ? { ...prev, current: elIndex } : null))
+      }
+    }
+  }
+
+  function handleContainerPointerUp() {
+    if (!isDragging.current) return
+    isDragging.current = false
+    setDragLine(null) // triggers re-render → hasSelection becomes visible
   }
 
   useEffect(() => {
-    const handlePointerUp = () => {
-      isDragging.current = false
-    }
-    window.addEventListener('pointerup', handlePointerUp)
-    return () => window.removeEventListener('pointerup', handlePointerUp)
+    window.addEventListener('pointerup', handleContainerPointerUp)
+    return () => window.removeEventListener('pointerup', handleContainerPointerUp)
   }, [])
 
   function handleConfirm() {
@@ -83,12 +116,19 @@ export function SticksPyramid({ sticks, disabled = false, onMove }: SticksPyrami
   function handleCancel() {
     isDragging.current = false
     setDrag(null)
+    setDragLine(null)
   }
 
-  const hasSelection = drag !== null && computeSelectedIndices(drag).length > 0
+  // Show confirm/cancel only after releasing the pointer
+  const hasSelection =
+    drag !== null && !isDragging.current && computeSelectedIndices(drag).length > 0
 
   return (
-    <div className="pyramid">
+    <div
+      className="pyramid"
+      ref={containerRef}
+      onPointerMove={handleContainerPointerMove}
+    >
       {ROWS.map((count, rowIndex) => (
         <div key={rowIndex} className="pyramid__row">
           {Array.from({ length: count }).map((_, stickIndex) => {
@@ -98,6 +138,8 @@ export function SticksPyramid({ sticks, disabled = false, onMove }: SticksPyrami
             return (
               <span
                 key={stickIndex}
+                data-stick-row={rowIndex}
+                data-stick-index={stickIndex}
                 className={[
                   'pyramid__stick',
                   crossed ? 'pyramid__stick--crossed' : '',
@@ -107,7 +149,6 @@ export function SticksPyramid({ sticks, disabled = false, onMove }: SticksPyrami
                   .filter(Boolean)
                   .join(' ')}
                 onPointerDown={(e) => handlePointerDown(e, rowIndex, stickIndex)}
-                onPointerEnter={() => handlePointerEnter(rowIndex, stickIndex)}
               >
                 |
               </span>
@@ -115,6 +156,23 @@ export function SticksPyramid({ sticks, disabled = false, onMove }: SticksPyrami
           })}
         </div>
       ))}
+
+      {/* Live line drawn by the pointer */}
+      {dragLine && (
+        <svg className="pyramid__line-overlay">
+          <line
+            x1={dragLine.startX}
+            y1={dragLine.startY}
+            x2={dragLine.endX}
+            y2={dragLine.endY}
+            stroke="#ff6b35"
+            strokeWidth="5"
+            strokeLinecap="round"
+            opacity="0.9"
+          />
+        </svg>
+      )}
+
       {hasSelection && (
         <div className="pyramid__actions">
           <button className="pyramid__btn pyramid__btn--confirm" onClick={handleConfirm}>
