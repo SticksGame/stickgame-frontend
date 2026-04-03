@@ -1,6 +1,6 @@
 # SticksGame — Frontend
 
-Web interface for the **SticksGame** multiplayer game (a variant of the Nim game). Built with **React 19 + TypeScript + Vite** and deployed to **Firebase Hosting**.
+Web interface for the **SticksGame** multiplayer game (a variant of the [Nim game](https://en.wikipedia.org/wiki/Nim)). Built with **React 19 + TypeScript + Vite** and deployed to **Firebase Hosting**.
 
 ---
 
