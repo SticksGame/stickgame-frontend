@@ -4,9 +4,16 @@ import type { Stick } from '../components/game/SticksPyramid'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:8080'
 
+export interface GamePlayer {
+  id: string
+  displayName: string
+  role: string
+}
+
 export interface GameEvent {
   state: string
   currentPlayerId: string | null
+  players: GamePlayer[]
   sticks: Stick[]
 }
 
