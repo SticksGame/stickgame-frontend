@@ -1,0 +1,86 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 1rem;
+  padding: 2rem;
+  width: min(480px, 90vw);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.modal__title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #ebebeb;
+  margin: 0;
+}
+
+.modal__description {
+  color: #999;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.modal__link-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+}
+
+.modal__link {
+  flex: 1;
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: #aaa;
+  word-break: break-all;
+}
+
+.modal__copy-btn {
+  flex-shrink: 0;
+  background: #646cff;
+  color: #fff;
+  border: none;
+  border-radius: 0.4rem;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  min-width: 80px;
+}
+
+.modal__copy-btn:hover {
+  opacity: 0.85;
+}
+
+.modal__close-btn {
+  align-self: flex-end;
+  background: transparent;
+  color: #666;
+  border: 1px solid #333;
+  border-radius: 0.4rem;
+  padding: 0.4rem 1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.modal__close-btn:hover {
+  color: #ebebeb;
+  border-color: #666;
+}

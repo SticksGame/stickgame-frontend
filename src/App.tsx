@@ -32,7 +32,7 @@ function App() {
       const currentUser = user ?? (await signInWithPopup(auth, googleProvider)).user
       const idToken = await currentUser.getIdToken()
       const gameId = await createGame(idToken)
-      navigate(`/game/${gameId}`)
+      navigate(`/game/${gameId}`, { state: { showInvite: true } })
     } catch (err) {
       console.error('Error starting game:', err)
     }
