@@ -1,117 +1,117 @@
 # SticksGame — Frontend
 
-Interfaz web del juego multijugador **SticksGame** (variante del juego Nim). Construida con **React 19 + TypeScript + Vite** y desplegada en **Firebase Hosting**.
+Web interface for the **SticksGame** multiplayer game (a variant of the Nim game). Built with **React 19 + TypeScript + Vite** and deployed to **Firebase Hosting**.
 
 ---
 
-## Descripción
+## Overview
 
-SticksGame es un juego de dos jugadores en el que por turnos se tachan palitos de una pirámide. El jugador que se vea obligado a tachar el último palito **pierde**. El frontend gestiona la autenticación, la creación e ingreso a partidas, la interacción con la pirámide de palitos, y recibe actualizaciones en tiempo real mediante **Server-Sent Events (SSE)**.
-
----
-
-## Reglas del juego
-
-- La pirámide tiene **16 palitos** en 4 filas: 1 – 3 – 5 – 7.
-- En cada turno, el jugador activo puede tachar **1 o más palitos**, siempre que:
-  - Estén en la **misma fila**
-  - Sean **consecutivos** (adyacentes)
-  - No estén ya tachados
-- El jugador que se ve obligado a tachar el **último palito restante pierde**.
-- El juego comienza con el turno del **guest** (el jugador que acepta la invitación).
+SticksGame is a two-player game where players take turns crossing out sticks from a pyramid. The player forced to cross the last remaining stick **loses**. The frontend handles authentication, game creation and joining, stick pyramid interaction, and receives real-time updates via **Server-Sent Events (SSE)**.
 
 ---
 
-## Stack tecnológico
+## Game Rules
 
-| Tecnología | Uso |
+- The pyramid has **16 sticks** across 4 rows: 1 – 3 – 5 – 7.
+- On each turn, the active player can cross out **one or more sticks**, as long as they are:
+  - In the **same row**
+  - **Consecutive** (adjacent indices)
+  - Not already crossed
+- The player forced to cross the **last remaining stick loses**.
+- The game starts with the **guest's** turn (the player who accepted the invitation).
+
+---
+
+## Tech Stack
+
+| Technology | Purpose |
 |---|---|
 | React 19 | UI |
-| TypeScript | Tipado estático |
-| Vite | Build tool y dev server |
-| React Router 7 | Navegación |
-| Firebase SDK | Autenticación con Google |
-| Firebase Hosting | Deploy de producción |
-| Server-Sent Events | Actualizaciones en tiempo real |
+| TypeScript | Static typing |
+| Vite | Build tool and dev server |
+| React Router 7 | Navigation |
+| Firebase SDK | Google authentication |
+| Firebase Hosting | Production deployment |
+| Server-Sent Events | Real-time updates |
 
 ---
 
-## Estructura del proyecto
+## Project Structure
 
 ```
 src/
-├── main.tsx                      # Entrada: React Router + AuthProvider
-├── App.tsx                       # Pantalla principal: botón "New Game"
-├── App.css                       # Estilos de la pantalla principal
-├── index.css                     # Estilos globales
+├── main.tsx                      # Entry point: React Router + AuthProvider
+├── App.tsx                       # Home screen: "New Game" button
+├── App.css                       # Home screen styles
+├── index.css                     # Global styles
 │
 ├── config/
-│   └── firebase.ts               # Inicialización de Firebase con variables de entorno
+│   └── firebase.ts               # Firebase initialization from environment variables
 │
 ├── context/
-│   └── AuthContext.tsx           # Context de autenticación; expone useAuth()
+│   └── AuthContext.tsx           # Auth context; exposes useAuth() hook
 │
 ├── hooks/
-│   └── useGameEvents.ts          # Hook SSE: recibe estado del juego en tiempo real
+│   └── useGameEvents.ts          # SSE hook: receives real-time game state
 │
 ├── pages/
-│   ├── GamePage.tsx              # Página del juego: lógica central, turno, modales
-│   └── GamePage.css              # Estilos de la página del juego
+│   ├── GamePage.tsx              # Game page: core logic, turns, modals
+│   └── GamePage.css              # Game page styles
 │
 └── components/
     ├── auth/
-    │   └── LoginButton.tsx       # Botón "Sign in with Google" / "Sign out"
+    │   └── LoginButton.tsx       # "Sign in with Google" / "Sign out" button
     └── game/
-        ├── SticksPyramid.tsx     # Pirámide interactiva con selección por arrastre
-        ├── SticksPyramid.css     # Estilos de la pirámide y palitos
-        ├── InviteModal.tsx       # Modal con link de invitación (para el owner)
+        ├── SticksPyramid.tsx     # Interactive pyramid with drag-to-select
+        ├── SticksPyramid.css     # Pyramid and stick styles
+        ├── InviteModal.tsx       # Invite link modal (shown to owner)
         ├── InviteModal.css
-        ├── GameOverModal.tsx     # Modal de fin de juego con ganador/perdedor
+        ├── GameOverModal.tsx     # End-of-game modal with winner/loser
         └── GameOverModal.css
 ```
 
 ---
 
-## Flujo de la aplicación
+## Application Flow
 
-### Crear una partida
-1. El usuario entra a la pantalla principal (`/`)
-2. Hace clic en **New Game** → se autentica con Google si no lo hizo
-3. El frontend llama a `POST /games` → obtiene `gameId` y `playerId`
-4. Navega a `/game/:gameId` con el `playerId` en el estado de navegación
-5. Se muestra el modal de invitación con el link para compartir
+### Creating a game
+1. User opens the home screen (`/`)
+2. Clicks **New Game** → authenticates with Google if not already signed in
+3. Frontend calls `POST /games` → receives `gameId` and `playerId`
+4. Navigates to `/game/:gameId` with `playerId` in navigation state
+5. Invite modal is shown with a shareable link
 
-### Unirse a una partida
-1. El invitado abre el link `/game/:gameId` en su navegador
-2. Si no está autenticado, se le muestra el botón de login con Google
-3. Una vez autenticado, el frontend llama automáticamente a `POST /games/:gameId/join`
-4. El guest obtiene su `playerId` y el juego comienza
-5. El owner recibe una notificación vía SSE: *"Nombre ha aceptado la invitación"*
+### Joining a game
+1. The guest opens the invite link `/game/:gameId`
+2. If not authenticated, a Google login button is shown
+3. Once signed in, the frontend automatically calls `POST /games/:gameId/join`
+4. Guest receives their `playerId` and the game begins
+5. The owner receives an SSE notification: *"Name has accepted the invitation"*
 
-### Jugar
-1. El jugador con el turno activo ve la pirámide habilitada
-2. Arrastra el cursor sobre los palitos que quiere tachar (misma fila, consecutivos)
-3. Una línea SVG se dibuja en tiempo real sobre los palitos seleccionados
-4. Al soltar, aparecen botones **Confirmar** / **Cancelar**
-5. Al confirmar, se llama a `PATCH /games/:gameId/sticks`
-6. El SSE actualiza la pantalla de ambos jugadores con el nuevo estado
+### Playing
+1. The player whose turn it is sees the pyramid enabled
+2. They drag across the sticks they want to cross (same row, consecutive)
+3. A live SVG line is drawn over the selected sticks in real time
+4. On pointer release, **Confirm** / **Cancel** buttons appear
+5. On confirm, `PATCH /games/:gameId/sticks` is called
+6. SSE updates both players' screens with the new game state
 
-### Fin del juego
-- Cuando quedan ≤1 palitos sin tachar, el backend marca la partida como `finished`
-- Se muestra `GameOverModal` indicando quién ganó con emoji 🎉 / 😔
-- Un botón lleva al jugador de vuelta a la pantalla principal
+### End of game
+- When ≤1 sticks remain, the backend marks the game as `finished`
+- `GameOverModal` is shown with 🎉 for the winner and 😔 for the loser
+- A button takes the player back to the home screen
 
 ---
 
-## Componentes principales
+## Key Components
 
 ### `SticksPyramid`
 
-Renderiza la pirámide interactiva. La selección de palitos funciona mediante:
-- **`onPointerDown`**: inicia el arrastre y libera el pointer capture para permitir eventos en otros elementos
-- **`onPointerMove`** en el contenedor + **`document.elementsFromPoint`**: detecta qué palitos están bajo el cursor usando atributos `data-stick-row` y `data-stick-index`
-- **SVG overlay**: línea que se dibuja en tiempo real siguiendo el arrastre
-- **`onPointerUp`**: finaliza la selección y muestra los botones de confirmar/cancelar
+Renders the interactive pyramid. Stick selection works via:
+- **`onPointerDown`**: starts the drag and releases pointer capture to allow events on other elements
+- **`onPointerMove`** on the container + **`document.elementsFromPoint`**: detects which sticks are under the pointer using `data-stick-row` and `data-stick-index` attributes
+- **SVG overlay**: a line drawn in real time following the drag
+- **`onPointerUp`**: finalizes the selection and shows confirm/cancel buttons
 
 Props:
 ```ts
@@ -124,7 +124,7 @@ interface SticksPyramidProps {
 
 ### `useGameEvents`
 
-Hook que abre una conexión SSE con el backend y expone el estado del juego:
+Hook that opens an SSE connection to the backend and exposes the game state:
 
 ```ts
 interface GameEvent {
@@ -136,21 +136,21 @@ interface GameEvent {
 }
 ```
 
-El token de Firebase se pasa como `?token=` en la URL del SSE ya que `EventSource` no soporta headers custom.
+The Firebase token is passed as `?token=` in the SSE URL since `EventSource` does not support custom headers.
 
 ### `GamePage`
 
-Coordina todo el flujo del juego:
-- Lee `myPlayerId` del estado de navegación (en creación) o de la respuesta del backend (en recarga)
-- Determina si es el turno del jugador: `isMyTurn = gameEvent.currentPlayerId === myPlayerId`
-- Detecta el fin de la partida: `gameEvent.state === 'finished'`
-- Muestra notificaciones cuando el guest se une (recibidas por SSE)
+Coordinates the entire game flow:
+- Reads `myPlayerId` from navigation state (on game creation) or from the backend response (on page refresh)
+- Determines whose turn it is: `isMyTurn = gameEvent.currentPlayerId === myPlayerId`
+- Detects end of game: `gameEvent.state === 'finished'`
+- Shows notifications when the guest joins (received via SSE)
 
 ---
 
-## Variables de entorno
+## Environment Variables
 
-Crear un archivo `.env` en la raíz del proyecto:
+Create a `.env` file in the project root:
 
 ```env
 VITE_BACKEND_URL=http://localhost:8080
@@ -162,18 +162,18 @@ VITE_FIREBASE_APP_ID=...
 
 ---
 
-## Desarrollo local
+## Local Development
 
 ```bash
 npm install
-npm run dev       # Dev server en http://localhost:5173
+npm run dev       # Dev server at http://localhost:5173
 ```
 
-## Build y deploy
+## Build & Deploy
 
 ```bash
-npm run build     # Compila TypeScript + Vite → dist/
+npm run build     # TypeScript + Vite build → dist/
 npm run deploy    # Build + firebase deploy --only hosting
 ```
 
-**URL de producción:** configurada en Firebase Hosting del proyecto `sticksgame-prod`
+**Production URL:** configured in Firebase Hosting under project `sticksgame-prod`
