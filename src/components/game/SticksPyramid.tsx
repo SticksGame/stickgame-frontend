@@ -52,6 +52,8 @@ export function SticksPyramid({ sticks, disabled = false, onMove }: SticksPyrami
     const stick = getStick(row, index)
     if (stick?.crossed) return
     e.preventDefault()
+    // Release pointer capture so pointerenter fires on other sticks during drag
+    e.currentTarget.releasePointerCapture(e.pointerId)
     isDragging.current = true
     setDrag({ row, anchor: index, current: index })
   }
