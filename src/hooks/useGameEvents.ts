@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { User } from 'firebase/auth'
+import type { Stick } from '../components/game/SticksPyramid'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:8080'
 
@@ -7,6 +8,7 @@ export interface GameEvent {
   state: string
   currentTurn: string
   isMyTurn: boolean
+  sticks: Stick[]
 }
 
 export function useGameEvents(gameId: string | undefined, user: User | null): GameEvent | null {
@@ -21,7 +23,9 @@ export function useGameEvents(gameId: string | undefined, user: User | null): Ga
     user.getIdToken().then((token) => {
       if (cancelled) return
 
-      es = new EventSource(`${BACKEND_URL}/games/${gameId}/events?token=${encodeURIComponent(token)}`)
+      es = new EventSource(
+        `${BACKEND_URL}/games/${gameId}/events?token=${encodeURIComponent(token)}`
+      )
 
       es.onmessage = (e) => {
         try {

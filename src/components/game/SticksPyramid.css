@@ -4,31 +4,91 @@
   align-items: center;
   gap: 0.5rem;
   font-family: monospace;
+  user-select: none;
 }
 
 .pyramid__row {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.4rem;
 }
 
 .pyramid__stick {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
   font-size: 2.5rem;
   line-height: 1;
   color: #e2c97e;
-  cursor: pointer;
-  user-select: none;
-  transition: color 0.15s, transform 0.15s;
+  cursor: grab;
+  position: relative;
+  transition: color 0.1s, transform 0.1s;
 }
 
-.pyramid__stick:hover {
+.pyramid__stick:hover:not(.pyramid__stick--crossed):not(.pyramid__stick--disabled) {
   color: #fff;
   transform: scaleY(1.1);
 }
 
-.pyramid--disabled .pyramid__stick {
-  color: #444;
-  cursor: not-allowed;
+/* Drag-selected: highlighted in orange before confirming */
+.pyramid__stick--selected {
+  color: #ff6b35;
+  text-shadow: 0 0 12px rgba(255, 107, 53, 0.7);
+  transform: scaleY(1.1);
+  cursor: grabbing;
+}
+
+/* Crossed: dim with a diagonal slash overlay */
+.pyramid__stick--crossed {
+  color: #3a3a3a;
+  cursor: default;
   pointer-events: none;
 }
 
+.pyramid__stick--crossed::after {
+  content: '';
+  position: absolute;
+  width: 160%;
+  height: 2px;
+  background: #8b2020;
+  top: 50%;
+  left: -30%;
+  transform: translateY(-50%) rotate(-30deg);
+  border-radius: 1px;
+}
+
+/* Disabled: not your turn */
+.pyramid__stick--disabled {
+  color: #444;
+  cursor: not-allowed;
+}
+
+.pyramid__actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.pyramid__btn {
+  padding: 0.6rem 1.8rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.pyramid__btn:hover {
+  opacity: 0.85;
+}
+
+.pyramid__btn--confirm {
+  background: #4caf50;
+  color: #fff;
+  font-weight: 600;
+}
+
+.pyramid__btn--cancel {
+  background: #333;
+  color: #ccc;
+}

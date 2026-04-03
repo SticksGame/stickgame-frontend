@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { SticksPyramid } from '../components/game/SticksPyramid'
+import type { Stick } from '../components/game/SticksPyramid'
 import { InviteModal } from '../components/game/InviteModal'
 import { JoinModal } from '../components/game/JoinModal'
 import { useGameEvents } from '../hooks/useGameEvents'
@@ -9,10 +10,11 @@ import './GamePage.css'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:8080'
 
-interface Game {
+interface GameData {
   id: string
   state: string
   isOwner: boolean
+  sticks: Stick[]
 }
 
 type ModalState = 'none' | 'invite' | 'join'
@@ -23,8 +25,12 @@ export function GamePage() {
   const navigate = useNavigate()
   const [modal, setModal] = useState<ModalState>('none')
   const [gameStarted, setGameStarted] = useState(false)
+  const [initialSticks, setInitialSticks] = useState<Stick[] | null>(null)
 
   const gameEvent = useGameEvents(gameStarted ? gameId : undefined, user)
+
+  // sticks come from SSE once connected, fall back to initial GET data
+  const sticks = gameEvent?.sticks ?? initialSticks ?? []
 
   useEffect(() => {
     if (!gameId || !user) return
@@ -34,7 +40,8 @@ export function GamePage() {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => res.json())
-        .then((game: Game) => {
+        .then((game: GameData) => {
+          setInitialSticks(game.sticks)
           if (game.state === 'ready') {
             setModal(game.isOwner ? 'invite' : 'join')
           } else if (game.state === 'playing') {
@@ -65,6 +72,19 @@ export function GamePage() {
     setGameStarted(true)
   }
 
+  async function handleMove(selected: { row: number; index: number }[]) {
+    if (!gameId || !user) return
+    const token = await user.getIdToken()
+    await fetch(`${BACKEND_URL}/games/${gameId}/sticks`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ sticks: selected }),
+    })
+  }
+
   const isMyTurn = gameEvent?.isMyTurn ?? false
   const turnLabel = !gameStarted
     ? 'Waiting for opponent...'
@@ -80,7 +100,11 @@ export function GamePage() {
       <p className={`game-page__turn ${isMyTurn && gameStarted ? 'game-page__turn--active' : ''}`}>
         {turnLabel}
       </p>
-      <SticksPyramid disabled={!isMyTurn || !gameStarted} />
+      <SticksPyramid
+        sticks={sticks}
+        disabled={!isMyTurn || !gameStarted}
+        onMove={handleMove}
+      />
       {modal === 'invite' && gameId && (
         <InviteModal gameId={gameId} onClose={handleInviteClose} />
       )}
