@@ -25,3 +25,30 @@
   color: #4caf50;
   font-weight: 600;
 }
+
+.game-page__status {
+  font-size: 1.4rem;
+  color: #ccc;
+  margin: 0;
+}
+
+.game-page__hint {
+  color: #666;
+  margin: 0.5rem 0 2rem;
+}
+
+.game-page__signin-btn {
+  padding: 0.85rem 2.5rem;
+  background: #4285f4;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.game-page__signin-btn:hover {
+  opacity: 0.88;
+}
