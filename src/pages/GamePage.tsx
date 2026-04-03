@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { SticksPyramid } from '../components/game/SticksPyramid'
 import { InviteModal } from '../components/game/InviteModal'
 import { JoinModal } from '../components/game/JoinModal'
+import { useGameEvents } from '../hooks/useGameEvents'
 import './GamePage.css'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:8080'
@@ -21,6 +22,9 @@ export function GamePage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [modal, setModal] = useState<ModalState>('none')
+  const [gameStarted, setGameStarted] = useState(false)
+
+  const gameEvent = useGameEvents(gameStarted ? gameId : undefined, user)
 
   useEffect(() => {
     if (!gameId || !user) return
@@ -33,6 +37,8 @@ export function GamePage() {
         .then((game: Game) => {
           if (game.state === 'ready') {
             setModal(game.isOwner ? 'invite' : 'join')
+          } else if (game.state === 'playing') {
+            setGameStarted(true)
           }
         })
         .catch(console.error)
@@ -47,18 +53,36 @@ export function GamePage() {
       headers: { Authorization: `Bearer ${token}` },
     })
     setModal('none')
+    setGameStarted(true)
   }
 
   function handleDecline() {
     navigate('/')
   }
 
+  function handleInviteClose() {
+    setModal('none')
+    setGameStarted(true)
+  }
+
+  const isMyTurn = gameEvent?.isMyTurn ?? false
+  const turnLabel = !gameStarted
+    ? 'Waiting for opponent...'
+    : gameEvent == null
+      ? 'Connecting...'
+      : isMyTurn
+        ? 'Your turn'
+        : 'Waiting for opponent...'
+
   return (
     <main className="game-page">
       <p className="game-page__id">Game: {gameId}</p>
-      <SticksPyramid />
+      <p className={`game-page__turn ${isMyTurn && gameStarted ? 'game-page__turn--active' : ''}`}>
+        {turnLabel}
+      </p>
+      <SticksPyramid disabled={!isMyTurn || !gameStarted} />
       {modal === 'invite' && gameId && (
-        <InviteModal gameId={gameId} onClose={() => setModal('none')} />
+        <InviteModal gameId={gameId} onClose={handleInviteClose} />
       )}
       {modal === 'join' && (
         <JoinModal onJoin={handleJoin} onDecline={handleDecline} />

@@ -25,3 +25,10 @@
   color: #fff;
   transform: scaleY(1.1);
 }
+
+.pyramid--disabled .pyramid__stick {
+  color: #444;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+

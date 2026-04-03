@@ -13,3 +13,15 @@
   color: #555;
   letter-spacing: 0.05em;
 }
+
+.game-page__turn {
+  font-size: 1.1rem;
+  color: #666;
+  letter-spacing: 0.05em;
+  transition: color 0.3s;
+}
+
+.game-page__turn--active {
+  color: #4caf50;
+  font-weight: 600;
+}
