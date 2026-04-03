@@ -3,16 +3,38 @@ import { auth, googleProvider } from './config/firebase'
 import { useAuth } from './context/AuthContext'
 import './App.css'
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:8080'
+
+async function createGame(idToken: string): Promise<string> {
+  const res = await fetch(`${BACKEND_URL}/games`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (!res.ok) throw new Error('Failed to create game')
+
+  const data = await res.json() as { id: string }
+  return data.id
+}
+
 function App() {
   const { user } = useAuth()
 
-  function handleNewGame() {
-    if (!user) {
-      if (!auth) return
-      signInWithPopup(auth, googleProvider)
-      return
+  async function handleNewGame() {
+    if (!auth) return
+
+    try {
+      const currentUser = user ?? (await signInWithPopup(auth, googleProvider)).user
+      const idToken = await currentUser.getIdToken()
+      const gameId = await createGame(idToken)
+      console.log('Game created:', gameId)
+      // TODO: navigate to game
+    } catch (err) {
+      console.error('Error starting game:', err)
     }
-    // TODO: navigate to new game
   }
 
   return (
