@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { SticksPyramid } from '../components/game/SticksPyramid'
 import type { Stick } from '../components/game/SticksPyramid'
 import { InviteModal } from '../components/game/InviteModal'
-import { JoinModal } from '../components/game/JoinModal'
+import { GameOverModal } from '../components/game/GameOverModal'
 import { useGameEvents } from '../hooks/useGameEvents'
 import './GamePage.css'
 
@@ -21,7 +21,7 @@ interface GameData {
   sticks: Stick[]
 }
 
-type ModalState = 'none' | 'invite' | 'join'
+type ModalState = 'none' | 'invite'
 
 export function GamePage() {
   const { gameId } = useParams<{ gameId: string }>()
@@ -42,6 +42,12 @@ export function GamePage() {
   const gameEvent = useGameEvents(gameStarted ? gameId : undefined, user)
   const sticks = gameEvent?.sticks ?? initialSticks ?? []
   const isMyTurn = !!myPlayerId && gameEvent?.currentPlayerId === myPlayerId
+
+  const gameOver = gameEvent?.state === 'finished'
+  const winner = gameOver && gameEvent?.winnerId
+    ? gameEvent.players.find((p) => p.id === gameEvent.winnerId) ?? null
+    : null
+  const iWon = !!winner && winner.id === myPlayerId
 
   // Notify owner when guest joins
   useEffect(() => {
@@ -67,7 +73,11 @@ export function GamePage() {
           // Use playerId from navigation state if available, otherwise from API
           if (!myPlayerId && game.myPlayerId) setMyPlayerId(game.myPlayerId)
           if (game.state === 'ready') {
-            setModal(game.isOwner ? 'invite' : 'join')
+            if (game.isOwner) {
+              setModal('invite')
+            } else {
+              handleJoin()
+            }
           } else if (game.state === 'playing') {
             setGameStarted(true)
           }
@@ -96,10 +106,6 @@ export function GamePage() {
     setMyPlayerId(data.id)
     setModal('none')
     setGameStarted(true)
-  }
-
-  function handleDecline() {
-    navigate('/')
   }
 
   function handleInviteClose() {
@@ -167,14 +173,18 @@ export function GamePage() {
       </p>
       <SticksPyramid
         sticks={sticks}
-        disabled={!isMyTurn || !gameStarted}
+        disabled={!isMyTurn || !gameStarted || gameOver}
         onMove={handleMove}
       />
       {modal === 'invite' && gameId && (
         <InviteModal gameId={gameId} onClose={handleInviteClose} />
       )}
-      {modal === 'join' && (
-        <JoinModal onJoin={handleJoin} onDecline={handleDecline} />
+      {gameOver && winner && (
+        <GameOverModal
+          won={iWon}
+          winnerName={winner.displayName}
+          onClose={() => navigate('/')}
+        />
       )}
     </main>
   )

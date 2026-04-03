@@ -1,0 +1,58 @@
+.gameover-modal__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.gameover-modal {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 16px;
+  padding: 3rem 3.5rem;
+  text-align: center;
+  max-width: 420px;
+  width: 90%;
+  animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.gameover-modal__emoji {
+  font-size: 4rem;
+  margin-bottom: 0.5rem;
+}
+
+.gameover-modal__title {
+  font-size: 2rem;
+  margin: 0 0 0.5rem;
+  color: #fff;
+}
+
+.gameover-modal__message {
+  color: #aaa;
+  font-size: 1.1rem;
+  margin: 0 0 2rem;
+}
+
+.gameover-modal__btn {
+  padding: 0.75rem 2.5rem;
+  background: #4285f4;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.gameover-modal__btn:hover {
+  opacity: 0.88;
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}

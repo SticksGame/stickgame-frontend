@@ -45,7 +45,6 @@ function App() {
         <button className="home__btn home__btn--primary" onClick={handleNewGame}>
           New Game
         </button>
-        <button className="home__btn home__btn--secondary">Join a Game</button>
       </div>
     </main>
   )

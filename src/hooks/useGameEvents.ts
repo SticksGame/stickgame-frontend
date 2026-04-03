@@ -13,6 +13,7 @@ export interface GamePlayer {
 export interface GameEvent {
   state: string
   currentPlayerId: string | null
+  winnerId: string | null
   players: GamePlayer[]
   sticks: Stick[]
 }
