@@ -5,18 +5,19 @@ import { useAuth } from '../../context/AuthContext';
 export function LoginButton() {
   const { user, loading } = useAuth();
 
+  if (!auth) return null;
   if (loading) return null;
 
   if (user) {
     return (
-      <button onClick={() => signOut(auth)}>
+      <button onClick={() => signOut(auth!)}>
         Sign out ({user.displayName})
       </button>
     );
   }
 
   return (
-    <button onClick={() => signInWithPopup(auth, googleProvider)}>
+    <button onClick={() => signInWithPopup(auth!, googleProvider)}>
       Sign in with Google
     </button>
   );
