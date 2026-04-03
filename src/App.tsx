@@ -6,7 +6,7 @@ import './App.css'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:8080'
 
-async function createGame(idToken: string): Promise<string> {
+async function createGame(idToken: string): Promise<{ id: string; playerId: string }> {
   const res = await fetch(`${BACKEND_URL}/games`, {
     method: 'POST',
     headers: {
@@ -17,8 +17,8 @@ async function createGame(idToken: string): Promise<string> {
 
   if (!res.ok) throw new Error('Failed to create game')
 
-  const data = await res.json() as { id: string }
-  return data.id
+  const data = await res.json() as { id: string; playerId: string }
+  return data
 }
 
 function App() {
@@ -31,8 +31,8 @@ function App() {
     try {
       const currentUser = user ?? (await signInWithPopup(auth, googleProvider)).user
       const idToken = await currentUser.getIdToken()
-      const gameId = await createGame(idToken)
-      navigate(`/game/${gameId}`)
+      const { id: gameId, playerId } = await createGame(idToken)
+      navigate(`/game/${gameId}`, { state: { playerId } })
     } catch (err) {
       console.error('Error starting game:', err)
     }

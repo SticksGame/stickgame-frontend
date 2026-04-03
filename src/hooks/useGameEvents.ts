@@ -6,8 +6,7 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:8080'
 
 export interface GameEvent {
   state: string
-  currentTurn: string
-  isMyTurn: boolean
+  currentPlayerId: string | null
   sticks: Stick[]
 }
 

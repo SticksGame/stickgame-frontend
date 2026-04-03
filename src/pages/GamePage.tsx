@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { signInWithPopup } from 'firebase/auth'
 import { auth, googleProvider } from '../config/firebase'
 import { useAuth } from '../context/AuthContext'
@@ -16,6 +16,8 @@ interface GameData {
   id: string
   state: string
   isOwner: boolean
+  myPlayerId: string | null
+  currentPlayerId: string | null
   sticks: Stick[]
 }
 
@@ -31,15 +33,21 @@ export function GamePage() {
   const { gameId } = useParams<{ gameId: string }>()
   const { user, loading } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+
   const [modal, setModal] = useState<ModalState>('none')
   const [gameStarted, setGameStarted] = useState(false)
   const [isOwner, setIsOwner] = useState(false)
+  const [myPlayerId, setMyPlayerId] = useState<string | null>(
+    (location.state as { playerId?: string } | null)?.playerId ?? null
+  )
   const [initialSticks, setInitialSticks] = useState<Stick[] | null>(null)
   const [notification, setNotification] = useState<string | null>(null)
   const prevState = useRef<string | null>(null)
 
   const gameEvent = useGameEvents(gameStarted ? gameId : undefined, user)
   const sticks = gameEvent?.sticks ?? initialSticks ?? []
+  const isMyTurn = !!myPlayerId && gameEvent?.currentPlayerId === myPlayerId
 
   async function fetchGuest(token: string) {
     const res = await fetch(`${BACKEND_URL}/games/${gameId}/players`, {
@@ -47,12 +55,10 @@ export function GamePage() {
     })
     const players: Player[] = await res.json()
     const guest = players.find((p) => p.role === 'guest')
-    if (guest) {
-      setNotification(`${guest.displayName} has accepted the invitation`)
-    }
+    if (guest) setNotification(`${guest.displayName} has accepted the invitation`)
   }
 
-  // Show notification to owner when guest joins (state transitions to 'playing')
+  // Notify owner when guest joins
   useEffect(() => {
     if (!gameEvent || !isOwner || !user) return
     if (prevState.current !== 'playing' && gameEvent.state === 'playing') {
@@ -72,6 +78,8 @@ export function GamePage() {
         .then((game: GameData) => {
           setInitialSticks(game.sticks)
           setIsOwner(game.isOwner)
+          // Use playerId from navigation state if available, otherwise from API
+          if (!myPlayerId && game.myPlayerId) setMyPlayerId(game.myPlayerId)
           if (game.state === 'ready') {
             setModal(game.isOwner ? 'invite' : 'join')
           } else if (game.state === 'playing') {
@@ -94,10 +102,12 @@ export function GamePage() {
   async function handleJoin() {
     if (!gameId || !user) return
     const token = await user.getIdToken()
-    await fetch(`${BACKEND_URL}/games/${gameId}/join`, {
+    const res = await fetch(`${BACKEND_URL}/games/${gameId}/join`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     })
+    const data = await res.json() as { id: string }
+    setMyPlayerId(data.id)
     setModal('none')
     setGameStarted(true)
   }
@@ -144,7 +154,6 @@ export function GamePage() {
     )
   }
 
-  const isMyTurn = gameEvent?.isMyTurn ?? false
   const turnLabel = !gameStarted
     ? 'Waiting for opponent...'
     : gameEvent == null
