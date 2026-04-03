@@ -1,0 +1,27 @@
+.pyramid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: monospace;
+}
+
+.pyramid__row {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.pyramid__stick {
+  display: inline-block;
+  font-size: 2.5rem;
+  line-height: 1;
+  color: #e2c97e;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s, transform 0.15s;
+}
+
+.pyramid__stick:hover {
+  color: #fff;
+  transform: scaleY(1.1);
+}

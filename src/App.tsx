@@ -1,4 +1,5 @@
 import { signInWithPopup } from 'firebase/auth'
+import { useNavigate } from 'react-router-dom'
 import { auth, googleProvider } from './config/firebase'
 import { useAuth } from './context/AuthContext'
 import './App.css'
@@ -22,6 +23,7 @@ async function createGame(idToken: string): Promise<string> {
 
 function App() {
   const { user } = useAuth()
+  const navigate = useNavigate()
 
   async function handleNewGame() {
     if (!auth) return
@@ -30,8 +32,7 @@ function App() {
       const currentUser = user ?? (await signInWithPopup(auth, googleProvider)).user
       const idToken = await currentUser.getIdToken()
       const gameId = await createGame(idToken)
-      console.log('Game created:', gameId)
-      // TODO: navigate to game
+      navigate(`/game/${gameId}`)
     } catch (err) {
       console.error('Error starting game:', err)
     }
