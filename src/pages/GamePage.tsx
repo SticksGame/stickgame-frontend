@@ -19,6 +19,12 @@ interface GameData {
   sticks: Stick[]
 }
 
+interface Player {
+  id: string
+  displayName: string
+  role: string
+}
+
 type ModalState = 'none' | 'invite' | 'join'
 
 export function GamePage() {
@@ -35,16 +41,25 @@ export function GamePage() {
   const gameEvent = useGameEvents(gameStarted ? gameId : undefined, user)
   const sticks = gameEvent?.sticks ?? initialSticks ?? []
 
-  // Show notification to owner when guest joins
+  async function fetchGuest(token: string) {
+    const res = await fetch(`${BACKEND_URL}/games/${gameId}/players`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    const players: Player[] = await res.json()
+    const guest = players.find((p) => p.role === 'guest')
+    if (guest) {
+      setNotification(`${guest.displayName} has accepted the invitation`)
+    }
+  }
+
+  // Show notification to owner when guest joins (state transitions to 'playing')
   useEffect(() => {
-    if (!gameEvent || !isOwner) return
+    if (!gameEvent || !isOwner || !user) return
     if (prevState.current !== 'playing' && gameEvent.state === 'playing') {
-      const name = gameEvent.guestName ?? gameEvent.guestEmail ?? 'Someone'
-      const email = gameEvent.guestEmail ? ` (${gameEvent.guestEmail})` : ''
-      setNotification(`${name}${email} has accepted the invitation`)
+      user.getIdToken().then((token) => fetchGuest(token))
     }
     prevState.current = gameEvent.state
-  }, [gameEvent, isOwner])
+  }, [gameEvent, isOwner, user])
 
   useEffect(() => {
     if (!gameId || !user) return

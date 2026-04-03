@@ -8,8 +8,6 @@ export interface GameEvent {
   state: string
   currentTurn: string
   isMyTurn: boolean
-  guestName: string | null
-  guestEmail: string | null
   sticks: Stick[]
 }
 
